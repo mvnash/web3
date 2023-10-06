@@ -1,12 +1,19 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Person from "./components/Person";
+import PersonsAPI from "./services/person";
 
 const App = () => {
-  const [persons, setPersons] = useState([{ name: "Arto Hellas", phone: "55-44-1245789"}]);
+  const [persons, setPersons] = useState([]);
   const [newName, setNewName] = useState("");
   const [newPhone, setNewPhone] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
+
+  useEffect(() => {
+    PersonsAPI.getAll()
+      .then((persons) => setPersons(persons))
+      .catch((error) => console.warn(error));
+  }, []);
 
   const handleNameChange = (event) => {
     setNewName(event.target.value);
@@ -18,7 +25,9 @@ const App = () => {
 
   const handleQueryChange = (event) => {
     setSearchQuery(event.target.value);
-    const results = persons.filter((person) => person.name.toLowerCase().includes(searchQuery.toLowerCase()))
+    const results = persons.filter((person) =>
+      person.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
     setSearchResults(results);
   };
 
@@ -31,7 +40,11 @@ const App = () => {
 
     persons.some((person) => person.name === newName)
       ? alert(newName + " is already contains in the list")
-      : setPersons(persons.concat(personObject));
+      : PersonsAPI.create(personObject).then((createdPerson) =>
+          setPersons([...persons, createdPerson])
+        );
+
+    setNewPhone("");
     setNewName("");
   };
 
@@ -54,7 +67,7 @@ const App = () => {
           name: <input onChange={handleNameChange} />
         </div>
         <div>
-          number: <input onChange={handlePhoneChange}/>
+          number: <input onChange={handlePhoneChange} />
         </div>
         <div>
           <button type="submit">add</button>
